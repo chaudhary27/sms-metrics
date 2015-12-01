@@ -1,6 +1,6 @@
 module Outputs
   require 'csv'
-  class RequestsMatches
+  class Metrics
     attr_accessor :keen
 
     def initialize
@@ -22,13 +22,12 @@ module Outputs
         end
     end
 
-    def req_match(start_date)
-      CSV.open("remat1.csv", "wb") do |csv|
-        csv << ["Date", "Requests", "Matches"]
+    def incoming_sms_responses(start_date)
+      CSV.open("incoming_sms.csv", "wb") do |csv|
+        csv << ["Date", "incoming_sms"]
         while start_date < Date.today
-          @requests = keen_query_1(start_date.to_time, (start_date+1.day).to_time, 'ride_request')
-          @matches = keen_query_1(start_date.to_time,(start_date+1.day).to_time,'match_fee_charged')
-          csv << ["#{start_date}", "#{@requests}", "#{@matches}"]
+          @incoming_sms = keen_query_1(start_date.to_time, (start_date+1.day).to_time, 'incoming_sms')
+          csv << ["#{start_date}", "#{@incoming_sms}"]
           start_date = start_date+1.day
         end
       end
@@ -40,21 +39,16 @@ module Outputs
           :start => keen_timestamp(start_time),
           :end => keen_timestamp(end_time)
         }, filters: [{
-          "property_name" => "pickup_hub_id",
-          "operator" => "eq",
-          "property_value" => taxi_line.weeels_id
-        },
-        {
-          "property_name" => "",
-          "operator" => "eq",
-          "property_value" => ""
+          "property_name" => "params.body",
+          "operator" => "contains",
+          "property_value" => "Unsubscribe"
         }]
       }, {
         method: :post,
         max_age: 100000
       })
-
     end
+
     def keen_query(start_time, end_time, collection_name, taxi_line)
       keen.count(collection_name, {
         timeframe: {

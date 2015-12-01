@@ -1,4 +1,6 @@
 require 'yaml'
+require 'active_support/all'
+
 module Weeels
   class Keen
     require 'keen'
@@ -9,7 +11,6 @@ module Weeels
 
     def client
       @client ||= new_client
-      #keen = Keen::Client.new(:read_timeout => 300)
     end
 
     def new_client
