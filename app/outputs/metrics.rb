@@ -39,6 +39,26 @@ module Outputs
       end
     end
 
+    def keen_query_1(start_time, end_time, collection_name)
+      keen.extraction(collection_name, {
+        timeframe: {
+          :start => keen_timestamp(start_time),
+          :end => keen_timestamp(end_time)
+        }, filters: [{
+          "property_name" => "params.body",
+          "operator" => "eq",
+          "property_value" => "STOP"
+        }]
+      }, {
+        method: :post,
+        max_age: 100000
+      })
+    end
+
+    # START WITH
+    # filter using keens filter to unsub or stop
+    # research how we can use keens regex matching etc.
+
     # takes array of user_ids and timestamps
     # returns last_msg_sent to that user_id and that timestamp
     #
@@ -46,19 +66,8 @@ module Outputs
       user_ids.each do |user_id|
         timestamps.each do |timestamp|
           last_msg = Weeels::ClassName.(user_id, timestamp)
+        end
       end
-    end
-
-    def keen_query_1(start_time, end_time, collection_name)
-      keen.count(collection_name, {
-        timeframe: {
-          :start => keen_timestamp(start_time),
-          :end => keen_timestamp(end_time)
-        }
-      }, {
-        method: :post,
-        max_age: 100000
-      })
     end
 
     # Takes a user_id and a timestamp
