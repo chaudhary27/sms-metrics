@@ -1,7 +1,6 @@
 require './env'
 
 namespace :migrate do
-
   task :cameras do
     TaxiLine.each do |tl|
       if tl.cameras.count == 0
@@ -19,5 +18,13 @@ namespace :migrate do
         end
       end
     end
+  end
+end
+
+namespace :sms do
+  desc "getting sms responses with UNSUBSCRIBE filter from keen"
+  task :sms_responses do
+    I = Outputs::Metrics.new
+    O = I.incoming_sms_responses(Date.new(2015,11,1))
   end
 end
