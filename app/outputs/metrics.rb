@@ -1,60 +1,51 @@
 module Outputs
   require 'csv'
   class Metrics
-    attr_accessor :keen
+    attr_accessor :keen, :incoming_sms
 
     def initialize
-        @keen = Weeels::Keen.new.client
+      @keen = Weeels::Keen.new.client
     end
 
-    def incoming_sms_responses(start_date)
-      CSV.open("incoming_sms.csv", "wb") do |csv|
-        csv << ["Date", "incoming_sms"]
-        while start_date < Date.today
-          @incoming_sms = keen_query_1(start_date.to_time, (start_date+1.day).to_time, 'incoming_sms')
-          #@incoming_sms_Unsub = keen_query_2(start_date.to_time, (start_date+1.day).to_time, 'incoming_sms')
-          #@incoming_sms.each do |sms|
-          #  body = sms["params.body"]
-          #  if (body = 'Unsubscribe' || body = "UNSUBSCRIBE")
-          csv << ["#{start_date}", "#{@incoming_sms}"]
-          #  end
-          #end
-          start_date = start_date+1.day
+    def incoming_sms_responses(end_date)
+      CSV.open("sms_analysis.csv", "wb") do |csv|
+        csv << ["Timestamp_receive", "Name_rec", "sms_body", "msgs_sent_count", "msgs_sent_timestamp", "msgs_sent_body"]
+        negative_responses = ["stop", "unsubscribe", "remove", "STOP", "Stop", "UNSUBSCRIBE", "REMOVE", "delete", "wrong number", "off", "do not", "spam", "who is this?"]
+        negative_responses.each do |keyword|
+          @incoming_sms = keen_query_1((end_date-7.day).to_time, (end_date).to_time, 'incoming_sms', keyword)
+          @incoming_sms.each do |sms|
+            end_date = Time.parse(sms["keen"]["timestamp"])
+            if sms["from_user"] == nil
+              name = "no_name_avail"
+              @root_msgs = keen_query_2((end_date-7.day).to_time, end_date, 'sent_sms_message')
+              @root_msgs_count = @root_msgs.count
+              @root_msgs.each_with_index do |msg, index|
+                if index == 0
+                  csv << ["#{sms["keen"]["timestamp"]}", "#{name}", "#{sms["body"]}", "#{@root_msgs_count}",
+                  "#{msg["keen"]["timestamp"]}", "#{msg["message"]}"]
+                else
+                  csv << ["", "", "", "","#{msg["keen"]["timestamp"]}", "#{msg["message"]}"]
+                end
+              end
+            else
+              user_id = sms["from_user"]["ID"]
+              @root_msgs = keen_query((end_date-7.day).to_time, end_date, 'sent_sms_message', user_id)
+              @root_msgs_count = @root_msgs.count
+              @root_msgs.each_with_index do |msg, index|
+                if index == 0
+                  csv << ["#{sms["keen"]["timestamp"]}", "#{sms["from_user"]["Name"]}", "#{sms["body"]}", "#{@root_msgs_count}",
+                  "#{msg["keen"]["timestamp"]}", "#{msg["message"]}"]
+                else
+                  csv << ["", "", "", "","#{msg["keen"]["timestamp"]}", "#{msg["message"]}"]
+                end
+              end
+            end
+          end
         end
       end
     end
 
-    # START WITH
-    # filter using keens filter to unsub or stop
-    # research how we can use keens regex matching etc.
-
-    # takes array of user_ids and timestamps
-    # returns last_msg_sent to that user_id and that timestamp
-    def sent_sms_message(start_date, user_id)
-      while start_date < Date.today
-          @last_msg = keen_query(start_date.to_time, (start_date+1.day).to_time, 'sent_sms_message', user_id)
-          start_date = start_date+1.day
-      end
-      puts @last_msg
-    end
-
-    def keen_query (start_time, end_time, collection_name, user_id)
-      keen.extraction(collection_name, {
-        timeframe: {
-          :start => keen_timestamp(start_time),
-          :end => keen_timestamp(end_time)
-        }, filters: [{
-          "property_name" => "ID",
-          "operator" => "eq",
-          "property_value" => user_id
-        }]
-      }, {
-        method: :post,
-        max_age: 100000
-      })
-    end
-
-    def keen_query_1(start_time, end_time, collection_name)
+    def keen_query_1(start_time, end_time, collection_name, keyword)
       keen.extraction(collection_name, {
         timeframe: {
           :start => keen_timestamp(start_time),
@@ -62,7 +53,7 @@ module Outputs
         }, filters: [{
           "property_name" => "params.body",
           "operator" => "contains",
-          "property_value" => "UNSUBSCRIBE"
+          "property_value" => keyword
         }]
       }, {
         method: :post,
@@ -70,43 +61,35 @@ module Outputs
       })
     end
 
-    def keen_query_2(start_time, end_time, collection_name)
+    def keen_query (start_time, end_time, collection_name, from_user_id)
       keen.extraction(collection_name, {
         timeframe: {
           :start => keen_timestamp(start_time),
           :end => keen_timestamp(end_time)
         }, filters: [{
-          "property_name" => "params.body",
-          "operator" => "contains",
-          "property_value" => "Unsubscribe"
+          "property_name" => "to_user.ID",
+          "operator" => "eq",
+          "property_value" => from_user_id
         }]
-
       }, {
         method: :post,
         max_age: 100000
       })
     end
 
-    # Takes a user_id and a timestamp
-    # Asks for last text msg send to that user_id & also provides # of sms sent to that user (marketing_only)
-
-=begin
-    def keen_query(start_time, end_time, collection_name, taxi_line)
-      keen.count(collection_name, {
+    def keen_query_2 (start_time, end_time, collection_name)
+      keen.extraction(collection_name, {
         timeframe: {
           :start => keen_timestamp(start_time),
           :end => keen_timestamp(end_time)
-        }, filters: [{
-          "property_name" => "pickup_hub_id",
-          "operator" => "eq",
-          "property_value" => taxi_line.weeels_id
-        }]
+        }
       }, {
         method: :post,
         max_age: 100000
       })
     end
-=end
+
+
     def keen_timestamp(t)
       t.iso8601(3)
     end

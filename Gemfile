@@ -9,3 +9,4 @@ gem 'keen'
 gem "em-http-request", "~> 1.0"
 gem 'time_difference'
 gem 'activesupport', '~> 4.2', '>= 4.2.5'
+gem 'whenever', :require => false

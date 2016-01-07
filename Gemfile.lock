@@ -17,6 +17,7 @@ GEM
       thread_safe (~> 0.3, >= 0.3.1)
     bson (3.2.6)
     builder (3.2.2)
+    chronic (0.10.2)
     coderay (1.1.0)
     coercible (1.0.0)
       descendants_tracker (~> 0.0.1)
@@ -90,6 +91,8 @@ GEM
       coercible (~> 1.0)
       descendants_tracker (~> 0.0, >= 0.0.3)
       equalizer (~> 0.0, >= 0.0.9)
+    whenever (0.9.4)
+      chronic (>= 0.6.3)
 
 PLATFORMS
   ruby
@@ -103,6 +106,7 @@ DEPENDENCIES
   mturk
   pry
   time_difference
+  whenever
 
 BUNDLED WITH
    1.10.6
