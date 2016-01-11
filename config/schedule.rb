@@ -26,3 +26,11 @@ end
 every 7.day, at: '10am' do
   rake 'google_doc:upload_to_google_drive'
 end
+
+every 7.day, at: '9am' do
+  rake 'NPS:nps_avg'
+end
+
+ever 7.day, at: '9:30' do
+  rake 'google_doc:update_in_google_doc'
+end
