@@ -35,9 +35,9 @@ namespace :google_doc do
   desc "uploads fils sms_analysis sheet to google doc"
   task :upload_to_google_drive do
     session = GoogleDrive.saved_session("config.json")
-    session.upload_from_file("sms_analysis.csv", "sms_analysis", convert: false)
-    #file = session.file_by_title("sms_analysis")
-    #file.update_from_file("sms_analysis.csv")
+    #session.upload_from_file("sms_analysis.csv", "sms_analysis", convert: false)
+    file = session.file_by_title("sms_analysis.csv")
+    file.update_from_file("sms_analysis.csv")
   end
 
   desc "updates file NPS_average.csv in google doc"

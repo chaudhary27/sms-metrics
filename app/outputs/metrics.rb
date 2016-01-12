@@ -8,11 +8,12 @@ module Outputs
     end
 
     def incoming_sms_responses(end_date)
-      CSV.open("sms_analysis.csv", "wb") do |csv|
-        csv << ["Timestamp_receive", "Name_rec", "sms_body", "msgs_sent_count", "msgs_sent_timestamp", "msgs_sent_body"]
+      CSV.open("sms_analysis.csv", "ab") do |csv|
+        #csv << ["#{Date.today}", "Timestamp receive", "Phone #", "Name", "sms body", "sms sent count", "sms sent timestamp", "sms_sent_body"]
+        csv << ["#{Date.today}", "", "", "", "", "", "", ""]
         negative_responses = ["stop", "unsubscribe", "remove", "STOP", "Stop", "UNSUBSCRIBE", "REMOVE", "delete", "wrong number", "off", "do not", "spam", "who is this?"]
         negative_responses.each do |keyword|
-          @incoming_sms = keen_query_1((end_date-7.day).to_time, (end_date).to_time, 'incoming_sms', keyword)
+          @incoming_sms = keen_query_1((end_date-1.day).to_time, (end_date).to_time, 'incoming_sms', keyword)
           @incoming_sms.each do |sms|
             end_date = Time.parse(sms["keen"]["timestamp"])
             if sms["from_user"] == nil
@@ -21,10 +22,10 @@ module Outputs
               @root_msgs_count = @root_msgs.count
               @root_msgs.each_with_index do |msg, index|
                 if index == 0
-                  csv << ["#{sms["keen"]["timestamp"]}", "#{name}", "#{sms["body"]}", "#{@root_msgs_count}",
+                  csv << ["", "#{sms["keen"]["timestamp"]}", "#{sms["from"]}", "#{name}", "#{sms["body"]}", "#{@root_msgs_count}",
                   "#{msg["keen"]["timestamp"]}", "#{msg["message"]}"]
                 else
-                  csv << ["", "", "", "","#{msg["keen"]["timestamp"]}", "#{msg["message"]}"]
+                  csv << ["", "", "", "", "", "","#{msg["keen"]["timestamp"]}", "#{msg["message"]}"]
                 end
               end
             else
@@ -33,10 +34,10 @@ module Outputs
               @root_msgs_count = @root_msgs.count
               @root_msgs.each_with_index do |msg, index|
                 if index == 0
-                  csv << ["#{sms["keen"]["timestamp"]}", "#{sms["from_user"]["Name"]}", "#{sms["body"]}", "#{@root_msgs_count}",
+                  csv << ["", "#{sms["keen"]["timestamp"]}", "#{sms["from"]}", "#{sms["from_user"]["Name"]}", "#{sms["body"]}", "#{@root_msgs_count}",
                   "#{msg["keen"]["timestamp"]}", "#{msg["message"]}"]
                 else
-                  csv << ["", "", "", "","#{msg["keen"]["timestamp"]}", "#{msg["message"]}"]
+                  csv << ["", "", "", "", "", "","#{msg["keen"]["timestamp"]}", "#{msg["message"]}"]
                 end
               end
             end
