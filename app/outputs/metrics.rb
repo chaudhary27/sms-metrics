@@ -100,18 +100,6 @@ module Outputs
         end
         avg = @nps_scores.inject(0.0){|sum, el| sum + el} / @nps_scores.size
         csv << ["#{Date.today}", "#{avg}"]
-            #@nps_score_ << @nps_score
-            #puts @nps_score_
-            #if @nps_score != nil && (@nps_score >=0 || @nps_score <=10)
-            #  @nps_score_ << @nps_score
-            #end
-            #nps_avg = keen_query_3((end_date-1.day).to_time, (end_date).to_time, 'incoming_sms')
-            #csv << ["#{body}"]
-          #end
-        #end
-        #puts @nps_score_
-        #@avg = @nps_score_.inject(0.0){|sum, el| sum + el} / @nps_score_.size
-        #  csv << ["#{Date.today}", "#{@feed_back_sms}"]
       end
     end
 
@@ -138,13 +126,7 @@ module Outputs
         max_age: 100000
       })
     end
-=begin
-    , filters: [{
-      "property_name" => "params.body",
-      "operator" => "gte",
-      "property_value" => "8"
-    }]
-=end
+
     def keen_timestamp(t)
       t.iso8601(3)
     end
